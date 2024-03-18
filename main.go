@@ -6,6 +6,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"path/filepath"
 	"regexp"
 	"time"
 
@@ -63,7 +64,7 @@ func main() {
 		&argparse.Options{Required: false, Help: "mqtt password to use", Default: nil})
 
 	topic := parser.String("t", "topic",
-		&argparse.Options{Required: false, Help: "mqtt topic to use", Default: "location"})
+		&argparse.Options{Required: false, Help: "mqtt topic to use", Default: nil})
 
 	throttleDuration := parser.Int("T", "throttle_duration",
 		&argparse.Options{Required: false, Help: "throttle in seconds", Default: 5})
@@ -82,6 +83,11 @@ func main() {
 	client := mqtt.NewClient(opts)
 	if token := client.Connect(); token.Wait() && token.Error() != nil {
 		log.Fatal(token.Error())
+	}
+
+	if *topic == "" {
+		// use log file basename without extension as topic
+		*topic = "geolog/" + filepath.Base(*logFile)
 	}
 
 	// open the maxmind db
@@ -138,6 +144,8 @@ func main() {
 				ip, record.Location.Latitude,
 				record.Location.Longitude)
 
+			//log topic and payload
+			fmt.Println(*topic)
 			token := client.Publish(*topic, 0, false, payload)
 			token.Wait()
 			log.Println(payload)
