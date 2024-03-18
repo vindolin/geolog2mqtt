@@ -44,7 +44,8 @@ func parseIp(line string) (net.IP, error) {
 
 func main() {
 	// setup command line arguments
-	parser := argparse.NewParser("run", "run the geolog websocket server")
+	parser := argparse.NewParser("run", "tail a log file and publish IP geocoordinates to an mqtt server")
+
 	// mandatory arguments
 	logFile := parser.String("l", "log_file",
 		&argparse.Options{Required: true, Help: "log file to tail"})
