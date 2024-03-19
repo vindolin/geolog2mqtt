@@ -69,10 +69,21 @@ func main() {
 	throttleDuration := parser.Int("T", "throttle_duration",
 		&argparse.Options{Required: false, Help: "throttle in seconds", Default: 5})
 
+	searchPattern := parser.String("s", "search_pattern",
+		&argparse.Options{Required: false, Help: "search pattern to use", Default: nil})
+
 	// parse the command line arguments
 	err := parser.Parse(os.Args)
 	if err != nil {
 		log.Print(parser.Usage(err))
+		os.Exit(1)
+	}
+
+	// compile the search pattern into a regular expression
+	searchRegexp, err := regexp.Compile(*searchPattern)
+	log.Println(*searchPattern)
+	if err != nil {
+		log.Fatalf("failed to compile search pattern: %v", err)
 		os.Exit(1)
 	}
 
@@ -117,6 +128,10 @@ func main() {
 
 		// read lines from the log file
 		for line := range tail.Lines {
+			// check if the line matches the search pattern
+			if !searchRegexp.MatchString(line.Text) {
+				continue
+			}
 
 			// parse the IP address from the line
 			ip, _ := parseIp(line.Text)
